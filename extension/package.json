@@ -1,0 +1,19 @@
+{
+  "name": "@plainagree/extension",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.0",
+    "esbuild": "^0.28.2",
+    "jsdom": "^27.0.0",
+    "typescript": "~5.9.3",
+    "vitest": "^4.0.0"
+  }
+}

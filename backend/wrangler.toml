@@ -1,0 +1,18 @@
+# Cloudflare Worker for the PlainAgree summarizer.
+# Deploy steps are in ../README.md ("Backend").
+name = "plainagree-api"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Optional: override the Claude model. Leave unset to use the default in src/summarize.ts.
+# MODEL = "claude-opus-5-5"
+
+[[kv_namespaces]]
+binding = "SUMMARY_CACHE"
+# PLACEHOLDER: replace with the id printed by `npx wrangler kv namespace create SUMMARY_CACHE`.
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+[observability]
+enabled = true
