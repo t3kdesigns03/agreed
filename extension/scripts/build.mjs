@@ -106,6 +106,9 @@ const builds = [
 for (const target of TARGETS) writeStatic(target);
 mkdirSync(join(dist, "demo"), { recursive: true });
 cpSync(join(root, "demo", "index.html"), join(dist, "demo", "index.html"));
+for (const icon of ["icon-32.png", "icon-256.png"]) {
+  cpSync(join(root, "static", "icons", icon), join(dist, "demo", icon));
+}
 
 if (watch) {
   for (const options of builds) {

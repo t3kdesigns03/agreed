@@ -1,0 +1,21 @@
+# Netlify hosts the PlainAgree demo page (extension/demo), served at
+# plainagree.t3kdesigns.app. The extension itself is distributed through
+# the browser add-on stores, not from here.
+
+[build]
+  command = "npm run build"
+  publish = "extension/dist/demo"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Only this site's own script runs. 'unsafe-inline' styles are needed for
+    # the page's <style> block and the card's Shadow DOM stylesheet.
+    Content-Security-Policy = "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+    Cross-Origin-Opener-Policy = "same-origin"
