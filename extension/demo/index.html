@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PlainAgree card demo</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f4f4f1;
+        --surface: #ffffff;
+        --text: #1a1a1a;
+        --muted: #555555;
+        --line: #d9d9d4;
+        --accent: #1d3b9e;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0f0f0f;
+          --surface: #1b1b1b;
+          --text: #ededed;
+          --muted: #a8a8a8;
+          --line: #333333;
+          --accent: #9db8ff;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-size: 16px;
+        line-height: 1.5;
+      }
+      main {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 32px 16px 200px;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 28px;
+      }
+      h2 {
+        margin: 40px 0 6px;
+        font-size: 20px;
+      }
+      p.lede {
+        margin: 0 0 8px;
+        color: var(--muted);
+        max-width: 70ch;
+      }
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+        margin-top: 16px;
+        align-items: start;
+      }
+      figure {
+        margin: 0;
+      }
+      figcaption {
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 12px 0;
+      }
+      .controls button {
+        padding: 10px 16px;
+        border: 2px solid var(--accent);
+        border-radius: 10px;
+        background: var(--surface);
+        color: var(--text);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .controls button.primary {
+        background: var(--accent);
+        color: var(--surface);
+      }
+      #log {
+        margin: 0;
+        padding: 12px 16px 12px 32px;
+        min-height: 48px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+        font-size: 14px;
+        color: var(--muted);
+      }
+      #sample-policy {
+        margin-top: 40px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+        max-width: 70ch;
+      }
+      /* A typical third-party cookie banner, for the live detector. */
+      .cookie-consent-banner {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+        padding: 16px;
+        background: #222831;
+        color: #f2f2f2;
+        font-size: 14px;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+      }
+      .cookie-consent-banner[hidden] {
+        display: none;
+      }
+      .cookie-consent-banner .inner {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px 24px;
+        max-width: 1160px;
+        margin: 0 auto;
+      }
+      .cookie-consent-banner p {
+        flex: 1 1 420px;
+        margin: 0;
+      }
+      .cookie-consent-banner a {
+        color: #9fc2ff;
+      }
+      .cookie-consent-banner button {
+        padding: 8px 14px;
+        border: 0;
+        border-radius: 6px;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .cookie-consent-banner .accept {
+        background: #4f8cff;
+        color: #ffffff;
+      }
+      .cookie-consent-banner .reject {
+        background: transparent;
+        color: #f2f2f2;
+        border: 1px solid #f2f2f2;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>PlainAgree card demo</h1>
+      <p class="lede">
+        These are the real card components from the extension, rendered with sample summaries. Nothing here talks to
+        the backend. Try the buttons, the close button, Tab, and Escape.
+      </p>
+
+      <h2>Sample cards</h2>
+      <div class="gallery">
+        <figure>
+          <figcaption>Green: nothing unusual</figcaption>
+          <div data-slot="green"></div>
+        </figure>
+        <figure>
+          <figcaption>Yellow: worth knowing</figcaption>
+          <div data-slot="yellow"></div>
+        </figure>
+        <figure>
+          <figcaption>Red: be careful</figcaption>
+          <div data-slot="red"></div>
+        </figure>
+        <figure>
+          <figcaption>Loading</figcaption>
+          <div data-slot="loading"></div>
+        </figure>
+        <figure>
+          <figcaption>Fallback when a summary fails</figcaption>
+          <div data-slot="error"></div>
+        </figure>
+      </div>
+
+      <h2>Live detection</h2>
+      <p class="lede">
+        The banner at the bottom of the page is a typical cookie banner. “Run detection” uses the extension's real
+        detector to find it, then shows the floating card as it appears on a website, with a sample summary.
+      </p>
+      <div class="controls">
+        <button id="run-detector" class="primary" type="button">Run detection</button>
+        <button id="reset-banner" type="button">Show the banner again</button>
+      </div>
+      <ol id="log" aria-live="polite"></ol>
+
+      <section id="sample-policy">
+        <h2>Sample policy</h2>
+        <p>
+          This is where “Show the real terms” leads in the sample cards. On a real website it opens the site's own
+          policy page in a new tab.
+        </p>
+      </section>
+    </main>
+
+    <div id="fake-banner" class="cookie-consent-banner" role="region" aria-label="Cookie consent">
+      <div class="inner">
+        <p>
+          We use cookies to improve your experience, show personalized ads and measure traffic. By clicking “Accept
+          all”, you agree to us and our 142 partners storing cookies on your device. Read our
+          <a href="https://example.com/cookie-policy">Cookie Policy</a>.
+        </p>
+        <button id="fake-reject" class="reject" type="button">Reject</button>
+        <button id="fake-accept" class="accept" type="button">Accept all</button>
+      </div>
+    </div>
+
+    <script src="demo.js"></script>
+  </body>
+</html>
