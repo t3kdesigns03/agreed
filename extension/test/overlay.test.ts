@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SummaryCard, userGesture, type CardOptions, type CloseReason } from "../src/content/overlay";
-import type { Summary } from "../../shared/types";
+import type { Summary } from "../src/shared/types";
 
 // The card uses a closed shadow root. Capture it so tests can look inside.
 const roots = new WeakMap<Element, ShadowRoot>();

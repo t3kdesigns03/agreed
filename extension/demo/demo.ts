@@ -1,37 +1,34 @@
-// Standalone demo: renders sample cards and runs the real detector on a fake
-// cookie banner. Uses canned summaries, so it needs no extension or backend.
-import type { PolicyKind, Summary } from "../../shared/types";
-import { detectConsent } from "../src/content/detect";
+// Standalone demo: runs the real on-device summarizer on sample policy text,
+// renders the cards, and runs the real detector on a fake cookie banner.
+import type { PolicyKind } from "../src/shared/types";
+import { detectConsent, visibleText } from "../src/content/detect";
 import { SummaryCard } from "../src/content/overlay";
+import { summarizePolicy } from "../src/summarize/summarize";
 
-const SAMPLES: Record<"green" | "yellow" | "red", Summary> = {
-  green: {
-    points: [
-      "They only use cookies that the website needs to work.",
-      "They don't share what you do here with advertisers.",
-    ],
-    risk: "green",
-    riskReason: "Nothing unusual. Your information is only used to run the site.",
-  },
-  yellow: {
-    points: [
-      "They use cookies to show you ads and count your visits.",
-      "If you tap Accept all, they share this with 142 ad partners.",
-      "You can say no to ad cookies and still use the site.",
-    ],
-    risk: "yellow",
-    riskReason: "Your visits are shared with advertisers unless you say no.",
-  },
-  red: {
-    points: [
-      "After the 7-day free trial, they charge you $14.99 every month.",
-      "They can sell your name, email and location to other companies.",
-      "You can't take them to court. Problems go to a private judge.",
-    ],
-    risk: "red",
-    riskReason: "Automatic charges and they can sell your personal information.",
-  },
+/** Sample policy text. The cards below are what the summarizer makes of it. */
+const SAMPLE_TEXT = {
+  green:
+    "We only use strictly necessary cookies to keep you signed in and remember your cart. " +
+    "We do not sell your personal information. You can change your cookie settings at any time.",
+  yellow:
+    "We and our 142 partners use cookies to show you personalised ads and measure traffic. " +
+    "You can reject non-essential cookies or change your preferences at any time.",
+  red:
+    "Your subscription will automatically renew each month after the free trial and you will be charged until you cancel. " +
+    "We may sell your personal information to data brokers and advertising partners. " +
+    "Any dispute will be resolved by binding arbitration and you waive any right to a class action.",
 };
+
+const SAMPLES = {
+  green: summarizePolicy(SAMPLE_TEXT.green, "cookies"),
+  yellow: summarizePolicy(SAMPLE_TEXT.yellow, "cookies"),
+  red: summarizePolicy(SAMPLE_TEXT.red, "terms"),
+};
+
+for (const [slot, text] of Object.entries(SAMPLE_TEXT)) {
+  const source = document.querySelector(`[data-source="${slot}"]`);
+  if (source) source.textContent = text;
+}
 
 function renderStatic(slot: string, build: (card: SummaryCard) => void, kind: PolicyKind = "cookies"): void {
   const container = document.querySelector<HTMLElement>(`[data-slot="${slot}"]`);
@@ -111,9 +108,11 @@ runButton.addEventListener("click", () => {
   liveCard = card;
   card.mount();
   card.showLoading();
+  // The demo can't fetch example.com's policy, so it summarizes the banner text itself.
+  const summary = summarizePolicy(visibleText(detection.root), detection.kind);
   window.setTimeout(() => {
-    if (card.isOpen) card.showSummary(SAMPLES.yellow);
-  }, 1200);
+    if (card.isOpen) card.showSummary(summary);
+  }, 600);
 });
 
 function log(message: string): void {

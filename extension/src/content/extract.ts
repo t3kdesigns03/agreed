@@ -1,4 +1,4 @@
-import { MAX_POLICY_CHARS, normalizePolicyText } from "../../../shared/types";
+import { MAX_POLICY_CHARS, normalizePolicyText } from "../shared/types";
 
 /** Elements that never hold policy text. */
 const NOISE_SELECTOR = [

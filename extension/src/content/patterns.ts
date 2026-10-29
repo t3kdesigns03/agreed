@@ -77,6 +77,11 @@ export const CONSENT_ATTRIBUTE_SELECTOR = [
   "[role='dialog']",
   "[role='alertdialog']",
   "dialog[open]",
+  // Generic pop-up containers. Too common to mean anything alone, but the
+  // scoring still needs consent wording or an accept button inside them.
+  "[class*='banner' i]",
+  "[class*='modal' i]",
+  "[class*='popup' i]",
 ].join(",");
 
 /** Attribute text (id, class, aria-label) that indicates a consent UI. */
@@ -107,6 +112,8 @@ export const AGREEMENT_PHRASE_PATTERNS: readonly RegExp[] = [
 ];
 
 export const COOKIE_PHRASE_PATTERNS: readonly RegExp[] = [
+  // The headline of many consent-manager banners.
+  /\bwe (value|respect|care about) your privacy\b/i,
   /\b(we|this (site|website)|our (site|website|partners)) uses? cookies\b/i,
   /\buse of cookies\b/i,
   /\bcookie (settings|preferences|policy|notice)\b/i,
@@ -116,7 +123,7 @@ export const COOKIE_PHRASE_PATTERNS: readonly RegExp[] = [
 /** Link text or URL patterns for each policy type, used to find the full policy. */
 export const POLICY_LINK_PATTERNS = {
   terms: /\b(terms( of (service|use))?|conditions|user agreement|eula|tos)\b/i,
-  privacy: /\bprivacy\b/i,
+  privacy: /\b(privacy|data (policy|protection))\b/i,
   cookies: /\bcookies?\b/i,
 } as const;
 

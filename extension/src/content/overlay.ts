@@ -1,4 +1,4 @@
-import type { PolicyKind, RiskLevel, Summary } from "../../../shared/types";
+import type { PolicyKind, RiskLevel, Summary } from "../shared/types";
 import { CARD_CSS } from "./overlay-styles";
 
 export type CloseReason = "dismissed" | "looks-okay" | "be-careful" | "accepted" | "consent-gone";
