@@ -1,26 +1,21 @@
-import type { PolicyKind, Summary } from "../../../shared/types";
+import type { PolicyKind } from "./types";
 
 // Content script -> background
-
-export interface SummarizeMessage {
-  type: "summarize";
-  text: string;
-  kind: PolicyKind;
-  truncated: boolean;
-  /** Page origin, kept on this device only for policy-drift tracking. Never sent to the backend. */
-  origin: string;
-}
 
 export interface FetchPolicyMessage {
   type: "fetch-policy";
   url: string;
 }
 
-export type BackgroundMessage = SummarizeMessage | FetchPolicyMessage;
+/** Record which policy a site showed, on this device only, for future "terms changed" alerts. */
+export interface PolicySeenMessage {
+  type: "policy-seen";
+  origin: string;
+  kind: PolicyKind;
+  text: string;
+}
 
-export type SummarizeReply =
-  | { ok: true; summary: Summary; cached: boolean }
-  | { ok: false; reason: "not-configured" | "offline" | "rejected" | "unavailable" };
+export type BackgroundMessage = FetchPolicyMessage | PolicySeenMessage;
 
 export type FetchPolicyReply = { ok: true; html: string; finalUrl: string } | { ok: false };
 

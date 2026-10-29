@@ -4,13 +4,12 @@
   "version": "1.0.0",
   "description": "PlainAgree: plain-English summaries of Terms of Service, privacy policies and cookie banners.",
   "workspaces": [
-    "extension",
-    "backend"
+    "extension"
   ],
   "scripts": {
     "build": "npm run build -w extension",
-    "typecheck": "npm run typecheck -w extension && npm run typecheck -w backend",
-    "test": "npm test -w extension && npm test -w backend",
+    "typecheck": "npm run typecheck -w extension",
+    "test": "npm test -w extension",
     "check": "npm run typecheck && npm test && npm run build"
   },
   "engines": {

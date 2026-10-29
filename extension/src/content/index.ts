@@ -1,6 +1,7 @@
-import type { PolicyKind } from "../../../shared/types";
 import { ext, sendToBackground } from "../shared/browser";
-import type { FetchPolicyReply, ManualCheckReply, SummarizeReply } from "../shared/messages";
+import type { FetchPolicyReply, ManualCheckReply, PolicySeenMessage } from "../shared/messages";
+import type { PolicyKind } from "../shared/types";
+import { summarizePolicy } from "../summarize/summarize";
 import { detectConsent, isRendered, type Detection } from "./detect";
 import { extractPolicyFromHtml, prepareForSummary } from "./extract";
 import { SummaryCard } from "./overlay";
@@ -14,8 +15,8 @@ const FIRST_SCAN_DELAY_MS = 800;
 const SCAN_DEBOUNCE_MS = 700;
 /** A fetched policy page with less text than this probably needs JavaScript to render. */
 const MIN_FETCHED_POLICY_CHARS = 400;
-/** Show the fallback card if no answer arrives within this time. */
-const SUMMARY_TIMEOUT_MS = 45_000;
+/** Show the fallback card if the linked policy hasn't loaded by then. */
+const POLICY_TIMEOUT_MS = 15_000;
 const CARD_TAG = "PLAINAGREE-CARD";
 
 declare global {
@@ -137,27 +138,20 @@ async function showCard(detection: Detection, followPolicyLink: boolean): Promis
   current.showLoading();
   watchConsentUi(current, detection.root);
 
-  let reply: SummarizeReply;
   try {
-    const text = followPolicyLink ? await gatherPolicyText(detection) : detection.text;
+    const text = followPolicyLink
+      ? await withTimeout(gatherPolicyText(detection), POLICY_TIMEOUT_MS).catch(() => detection.text)
+      : detection.text;
     const prepared = prepareForSummary(text);
-    reply = await withTimeout(
-      sendToBackground<SummarizeReply>({
-        type: "summarize",
-        text: prepared.text,
-        truncated: prepared.truncated,
-        kind: detection.kind,
-        origin: location.origin,
-      }),
-      SUMMARY_TIMEOUT_MS,
-    );
+    // Summarizing happens right here on the device; nothing is sent anywhere.
+    const summary = summarizePolicy(prepared.text, detection.kind);
+    if (!current.isOpen) return;
+    current.showSummary(summary);
+    const seen: PolicySeenMessage = { type: "policy-seen", origin: location.origin, kind: detection.kind, text: prepared.text };
+    sendToBackground(seen).catch(() => undefined);
   } catch {
-    reply = { ok: false, reason: "unavailable" };
+    if (current.isOpen) current.showError();
   }
-
-  if (!current.isOpen) return;
-  if (reply?.ok) current.showSummary(reply.summary);
-  else current.showError();
 }
 
 /**

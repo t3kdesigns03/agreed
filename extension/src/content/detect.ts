@@ -1,4 +1,4 @@
-import type { PolicyKind } from "../../../shared/types";
+import type { PolicyKind } from "../shared/types";
 import {
   AGREEMENT_PHRASE_PATTERNS,
   CLICKABLE_SELECTOR,

@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { detectConsent, normalizeLabel } from "../src/content/detect";
 import { extractPolicyFromHtml, prepareForSummary } from "../src/content/extract";
-import { MAX_POLICY_CHARS } from "../../shared/types";
+import { MAX_POLICY_CHARS } from "../src/shared/types";
 
 /** jsdom has no layout, so treat anything not hidden by attribute or inline style as visible. */
 function visible(el: Element): boolean {
@@ -47,6 +47,19 @@ describe("detectConsent", () => {
     const result = detect(doc);
     expect(result?.root.id).toBe("onetrust-banner-sdk");
     expect(result?.acceptLabel).toBe("I Accept");
+  });
+
+  it("finds a 'We value your privacy' banner in a generic modal", () => {
+    const doc = page(`
+      <div class="site-modal">
+        <h2>We value your privacy</h2>
+        <p>Read our <a href="https://example.com/data-protection">data protection notice</a>.</p>
+        <button>Agree and continue</button>
+      </div>`);
+    const result = detect(doc);
+    expect(result?.root.className).toBe("site-modal");
+    expect(result?.kind).toBe("cookies");
+    expect(result?.policyUrl).toBe("https://example.com/data-protection");
   });
 
   it("finds 'By signing up you agree' text with links to the terms", () => {

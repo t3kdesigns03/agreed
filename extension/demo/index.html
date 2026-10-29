@@ -55,13 +55,24 @@
       }
       .gallery {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
         gap: 20px;
         margin-top: 16px;
         align-items: start;
       }
       figure {
         margin: 0;
+      }
+      .source {
+        margin: 10px 0 0;
+        padding: 10px 12px;
+        border-left: 3px solid var(--line);
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .source::before {
+        content: "Sample text: ";
+        font-weight: 600;
       }
       figcaption {
         margin-bottom: 8px;
@@ -161,8 +172,8 @@
     <main>
       <h1>PlainAgree card demo</h1>
       <p class="lede">
-        These are the real card components from the extension, rendered with sample summaries. Nothing here talks to
-        the backend. Try the buttons, the close button, Tab, and Escape.
+        These are the real card components from the extension. Each card is what PlainAgree's on-device summarizer
+        makes of the sample text under it. Nothing here goes over the network. Try the buttons, Tab, and Escape.
       </p>
 
       <h2>Sample cards</h2>
@@ -170,21 +181,24 @@
         <figure>
           <figcaption>Green: nothing unusual</figcaption>
           <div data-slot="green"></div>
+          <p class="source" data-source="green"></p>
         </figure>
         <figure>
           <figcaption>Yellow: worth knowing</figcaption>
           <div data-slot="yellow"></div>
+          <p class="source" data-source="yellow"></p>
         </figure>
         <figure>
           <figcaption>Red: be careful</figcaption>
           <div data-slot="red"></div>
+          <p class="source" data-source="red"></p>
         </figure>
         <figure>
           <figcaption>Loading</figcaption>
           <div data-slot="loading"></div>
         </figure>
         <figure>
-          <figcaption>Fallback when a summary fails</figcaption>
+          <figcaption>Fallback when something goes wrong</figcaption>
           <div data-slot="error"></div>
         </figure>
       </div>
@@ -192,7 +206,7 @@
       <h2>Live detection</h2>
       <p class="lede">
         The banner at the bottom of the page is a typical cookie banner. “Run detection” uses the extension's real
-        detector to find it, then shows the floating card as it appears on a website, with a sample summary.
+        detector to find it, then shows the floating card as it appears on a website, summarizing the banner's text.
       </p>
       <div class="controls">
         <button id="run-detector" class="primary" type="button">Run detection</button>

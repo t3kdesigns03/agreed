@@ -1,6 +1,6 @@
 // Builds the extension for each browser into dist/<target>/, plus the demo page.
 //
-//   PLAINAGREE_BACKEND_URL=https://plainagree-api.example.workers.dev npm run build
+//   npm run build
 //   npm run watch      # rebuild on change
 //
 // Targets: chrome (also Edge, Opera, Brave, Vivaldi), firefox (desktop and
@@ -14,17 +14,6 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = join(root, "dist");
 const watch = process.argv.includes("--watch");
 const { version } = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-
-// PLACEHOLDER: the real deployment URL comes from PLAINAGREE_BACKEND_URL. Until
-// it is set, the extension shows the fallback card instead of a summary.
-const PLACEHOLDER_BACKEND_URL = "https://plainagree-api.YOUR-SUBDOMAIN.workers.dev";
-const backendUrl = process.env.PLAINAGREE_BACKEND_URL || PLACEHOLDER_BACKEND_URL;
-if (backendUrl === PLACEHOLDER_BACKEND_URL) {
-  console.warn(
-    "\n⚠  PLAINAGREE_BACKEND_URL is not set. The build will show the fallback card instead of summaries.\n" +
-      "   Set it to your deployed Worker URL, e.g. PLAINAGREE_BACKEND_URL=http://localhost:8787 for `wrangler dev`.\n",
-  );
-}
 
 // PLACEHOLDER: replace with your own add-on ID before publishing to addons.mozilla.org.
 const FIREFOX_ADDON_ID = "plainagree@example.com";
@@ -44,7 +33,7 @@ function manifest(target) {
       default_icon: { 16: "icons/icon-16.png", 32: "icons/icon-32.png" },
     },
     permissions: ["storage"],
-    // Needed to read linked policy pages from the background script and to reach the backend.
+    // Needed to read the policy pages that consent banners link to.
     host_permissions: ["http://*/*", "https://*/*"],
     content_scripts: [
       {
@@ -67,7 +56,8 @@ function manifest(target) {
         gecko: {
           id: FIREFOX_ADDON_ID,
           strict_min_version: "128.0",
-          data_collection_permissions: { required: ["websiteContent"] },
+          // PlainAgree sends nothing anywhere: summaries are made on the device.
+          data_collection_permissions: { required: ["none"] },
         },
         gecko_android: { strict_min_version: "128.0" },
       },
@@ -81,7 +71,6 @@ const common = {
   bundle: true,
   format: "iife",
   target: ["chrome116", "firefox128", "safari16"],
-  define: { __BACKEND_URL__: JSON.stringify(backendUrl) },
   logLevel: "info",
   legalComments: "none",
 };
