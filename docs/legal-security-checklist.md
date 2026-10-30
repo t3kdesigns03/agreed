@@ -27,7 +27,7 @@ Project: **Agreed** (browser extension, formerly "PlainAgree")  Date: **29 Octob
   what the colors do and don't mean.
 
 - [x] **Terms / Privacy needed? Drafted, dated, linked where the user acts?**
-  `extension/static/privacy.html` ("Privacy and disclaimer", dated 29 October 2026). It's bundled inside the extension,
+  `extension/static/privacy.html` ("Privacy and disclaimer", dated 30 October 2026; it also covers the demo website). It's bundled inside the extension,
   so the link always works offline and never points at a placeholder. It's linked from the toolbar popup and the demo
   site. The contact is real: GitHub Issues on the public repo.
   No separate Terms of Service: the extension is free, has no accounts and takes no actions, and the disclaimer

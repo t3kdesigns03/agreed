@@ -13,6 +13,10 @@
     <style>
       :root {
         color-scheme: light dark;
+        /* Height of the fixed sample banner. demo.js measures it and updates this;
+           these values are the no-script fallback. */
+        --banner-space: 200px;
+        scroll-padding-bottom: calc(var(--banner-space) + 16px);
         --bg: #f4f4f1;
         --surface: #ffffff;
         --text: #1a1a1a;
@@ -44,12 +48,12 @@
       main {
         max-width: 1160px;
         margin: 0 auto;
-        padding: 32px 16px 200px;
+        /* Leave room for the fixed banner so everything can be scrolled clear of it. */
+        padding: 32px 16px calc(var(--banner-space) + 32px);
       }
       @media (max-width: 600px) {
-        /* The sample banner is taller on phones; leave room to scroll everything above it. */
-        main {
-          padding-bottom: 360px;
+        :root {
+          --banner-space: 360px;
         }
       }
       h1 {
@@ -91,6 +95,31 @@
         font-size: 14px;
         font-weight: 600;
         color: var(--muted);
+      }
+      .static-note {
+        display: block;
+        font-weight: 400;
+      }
+      .dismissed {
+        margin: 0;
+        padding: 16px;
+        border: 2px dashed var(--line);
+        border-radius: 16px;
+        color: var(--muted);
+      }
+      .dismissed:focus-visible,
+      #sample-policy:focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 3px;
+      }
+      .demo-note {
+        margin: 12px 0 0;
+        padding: 10px 14px;
+        max-width: 70ch;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface);
+        font-size: 15px;
       }
       .controls {
         display: flex;
@@ -137,7 +166,7 @@
         right: 0;
         bottom: 0;
         z-index: 1000;
-        padding: 16px;
+        padding: 16px 16px max(16px, env(safe-area-inset-bottom));
         background: #222831;
         color: #f2f2f2;
         font-size: 14px;
@@ -185,10 +214,22 @@
       <h1>Agreed card demo</h1>
       <p class="lede">
         These are the real card components from the extension. Each card is what Agreed's on-device summarizer
-        makes of the sample text under it. Nothing here goes over the network. Try the buttons, Tab, and Escape.
+        makes of the sample text under it. Try the buttons, Tab, and Escape.
+      </p>
+      <p class="lede" id="network-note">
+        Once loaded, this demo page makes no network requests. The real extension makes one kind: when a banner links to
+        a cookie, privacy or terms page on the same website, it downloads that page to read the full text, without your
+        cookies and without a referrer. It never contacts other websites, and nothing is sent to us.
       </p>
 
       <h2>Sample cards</h2>
+      <div class="controls">
+        <button id="reset-samples" type="button">Reset sample cards</button>
+      </div>
+      <p class="demo-note" id="real-terms-note">
+        <strong>Demo only:</strong> in these sample cards, “Show the real terms” jumps to the Sample policy box at the
+        bottom of this page. On a real website, it opens that website's own policy in a new tab.
+      </p>
       <div class="gallery">
         <figure>
           <figcaption>Green: nothing unusual</figcaption>
@@ -206,11 +247,17 @@
           <p class="source" data-source="red"></p>
         </figure>
         <figure>
-          <figcaption>Loading</figcaption>
+          <figcaption>
+            Loading (static example)
+            <span class="static-note">
+              This is what the card shows while Agreed reads a policy. It stays like this on purpose here; on a real
+              website the summary replaces it when it's ready.
+            </span>
+          </figcaption>
           <div data-slot="loading"></div>
         </figure>
         <figure>
-          <figcaption>Fallback when something goes wrong</figcaption>
+          <figcaption>Fallback when something goes wrong (static example)</figcaption>
           <div data-slot="error"></div>
         </figure>
       </div>
@@ -231,11 +278,11 @@
         not legal advice. <a href="privacy.html">Privacy and disclaimer</a>
       </p>
 
-      <section id="sample-policy">
-        <h2>Sample policy</h2>
+      <section id="sample-policy" tabindex="-1" aria-labelledby="sample-policy-title">
+        <h2 id="sample-policy-title">Sample policy (demo only)</h2>
         <p>
-          This is where “Show the real terms” leads in the sample cards. On a real website it opens the site's own
-          policy page in a new tab.
+          This is where “Show the real terms” leads in the sample cards. It isn't a real policy. On a real website the
+          link opens the site's own policy page in a new tab.
         </p>
       </section>
     </main>
