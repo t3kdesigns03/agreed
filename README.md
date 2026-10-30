@@ -95,7 +95,8 @@ npm run check
 `check` type-checks, runs the tests (detection heuristics, the summary rules, text extraction, the card) and builds
 every target into `extension/dist/`.
 
-To see the card without installing anything, build and open the demo page:
+To see the card without installing anything, open the live demo at **https://agreed.t3kdesigns.app** (hosted on
+Netlify, built from `netlify.toml`), or build and open it locally:
 
 ```bash
 npm run build && npx esbuild --servedir=extension/dist/demo --serve=5173

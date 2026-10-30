@@ -1,5 +1,5 @@
 # Netlify hosts the Agreed demo page (extension/demo), served at
-# plainagree.t3kdesigns.app. The extension itself is distributed through
+# agreed.t3kdesigns.app. The extension itself is distributed through
 # the browser add-on stores, not from here.
 
 [build]
