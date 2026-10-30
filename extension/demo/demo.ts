@@ -1,9 +1,10 @@
 // Standalone demo: runs the real on-device summarizer on sample policy text,
 // renders the cards, and runs the real detector on a fake cookie banner.
-import type { PolicyKind } from "../src/shared/types";
 import { detectConsent, visibleText } from "../src/content/detect";
 import { SummaryCard } from "../src/content/overlay";
 import { summarizePolicy } from "../src/summarize/summarize";
+import { SampleGallery } from "./gallery";
+import { reserveSpaceForBanner } from "./layout";
 
 /** Sample policy text. The cards below are what the summarizer makes of it. */
 const SAMPLE_TEXT = {
@@ -30,31 +31,31 @@ for (const [slot, text] of Object.entries(SAMPLE_TEXT)) {
   if (source) source.textContent = text;
 }
 
-function renderStatic(slot: string, build: (card: SummaryCard) => void, kind: PolicyKind = "cookies"): void {
-  const container = document.querySelector<HTMLElement>(`[data-slot="${slot}"]`);
-  if (!container) return;
-  const card = new SummaryCard({
-    kind,
-    realTermsUrl: "#sample-policy",
-    onClose: (reason) => {
-      log(`Sample "${slot}" card closed (${reason}).`);
-      // Re-render so the gallery stays complete.
-      window.setTimeout(() => renderStatic(slot, build, kind), 400);
-    },
-    container,
-  });
-  card.mount();
-  build(card);
+// In the samples, "Show the real terms" jumps to the in-page sample policy box.
+// On a real website the card links to that site's own policy instead.
+function showSamplePolicy(): void {
+  const policy = document.getElementById("sample-policy");
+  if (!policy) return;
+  policy.scrollIntoView({ block: "start" });
+  policy.focus({ preventScroll: true });
 }
 
-renderStatic("green", (c) => c.showSummary(SAMPLES.green));
-renderStatic("yellow", (c) => c.showSummary(SAMPLES.yellow));
-renderStatic("red", (c) => c.showSummary(SAMPLES.red), "terms");
-renderStatic("loading", (c) => c.showLoading());
-renderStatic("error", (c) => c.showError(), "terms");
+const gallery = new SampleGallery(
+  document,
+  [
+    { slot: "green", label: "Green", kind: "cookies", show: (c) => c.showSummary(SAMPLES.green) },
+    { slot: "yellow", label: "Yellow", kind: "cookies", show: (c) => c.showSummary(SAMPLES.yellow) },
+    { slot: "red", label: "Red", kind: "terms", show: (c) => c.showSummary(SAMPLES.red) },
+    { slot: "loading", label: "Loading", kind: "cookies", show: (c) => c.showLoading() },
+    { slot: "error", label: "Fallback", kind: "terms", show: (c) => c.showError() },
+  ],
+  { log, onShowRealTerms: showSamplePolicy },
+);
+document.getElementById("reset-samples")?.addEventListener("click", () => gallery.reset());
 
 // Live detection on the fake banner below.
 const banner = document.getElementById("fake-banner") as HTMLElement;
+reserveSpaceForBanner(banner);
 const acceptButton = document.getElementById("fake-accept") as HTMLButtonElement;
 const runButton = document.getElementById("run-detector") as HTMLButtonElement;
 const resetButton = document.getElementById("reset-banner") as HTMLButtonElement;

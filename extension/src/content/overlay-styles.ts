@@ -30,6 +30,7 @@ export const CARD_CSS = `
   z-index: 2147483647;
   width: min(440px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
   overflow-y: auto;
   box-sizing: border-box;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -76,6 +77,7 @@ export const CARD_CSS = `
     left: 8px;
     width: auto;
     max-height: calc(100vh - 16px);
+    max-height: calc(100dvh - 16px);
   }
 }
 
@@ -99,6 +101,15 @@ export const CARD_CSS = `
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 6px;
+}
+
+/* When the floating card is taller than the screen and scrolls, keep the
+   close button in view so there's always a way out. */
+.wrap:not(.inline) .top {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg);
 }
 
 .brand {
