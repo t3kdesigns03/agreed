@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>PlainAgree card demo</title>
+    <title>Agreed card demo</title>
     <meta
       name="description"
-      content="PlainAgree explains cookie banners and terms of service in plain English, right on your device. Try the summary cards."
+      content="Agreed explains cookie banners and terms of service in plain English, right on your device. Try the summary cards."
     />
     <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png" />
     <link rel="apple-touch-icon" href="icon-256.png" />
@@ -45,6 +45,12 @@
         max-width: 1160px;
         margin: 0 auto;
         padding: 32px 16px 200px;
+      }
+      @media (max-width: 600px) {
+        /* The sample banner is taller on phones; leave room to scroll everything above it. */
+        main {
+          padding-bottom: 360px;
+        }
       }
       h1 {
         margin: 0 0 4px;
@@ -176,9 +182,9 @@
   </head>
   <body>
     <main>
-      <h1>PlainAgree card demo</h1>
+      <h1>Agreed card demo</h1>
       <p class="lede">
-        These are the real card components from the extension. Each card is what PlainAgree's on-device summarizer
+        These are the real card components from the extension. Each card is what Agreed's on-device summarizer
         makes of the sample text under it. Nothing here goes over the network. Try the buttons, Tab, and Escape.
       </p>
 
@@ -219,6 +225,11 @@
         <button id="reset-banner" type="button">Show the banner again</button>
       </div>
       <ol id="log" aria-live="polite"></ol>
+
+      <p class="lede">
+        Agreed only explains. It never presses “Accept” or anything else for you, and its cards are automatic summaries,
+        not legal advice. <a href="privacy.html">Privacy and disclaimer</a>
+      </p>
 
       <section id="sample-policy">
         <h2>Sample policy</h2>

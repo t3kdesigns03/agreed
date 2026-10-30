@@ -1,7 +1,7 @@
-# PlainAgree
+# Agreed
 
-PlainAgree is a browser extension that explains what you're agreeing to. When a website shows a cookie banner, a
-"By continuing you agree…" line, or a Terms of Service pop-up, PlainAgree shows a short, large-print card in plain
+Agreed is a browser extension that explains what you're agreeing to. When a website shows a cookie banner, a
+"By continuing you agree…" line, or a Terms of Service pop-up, Agreed shows a short, large-print card in plain
 English, with a green, yellow or red rating:
 
 > **What you're agreeing to**
@@ -25,6 +25,7 @@ pay for, and nothing about the user or their browsing is sent anywhere.
 - [Android: what works and what doesn't](#android-what-works-and-what-doesnt)
 - [Detection and tuning](#detection-and-tuning)
 - [Privacy](#privacy)
+- [Legal and security](#legal-and-security)
 - [Accessibility](#accessibility)
 - [Placeholders to replace before release](#placeholders-to-replace-before-release)
 - [Known limitations](#known-limitations)
@@ -37,7 +38,7 @@ pay for, and nothing about the user or their browsing is sent anywhere.
 │ cookie banner│ ──────────▶ │ content script                               │
 │ TOS modal    │             │  • scores consent UIs (patterns.ts)          │
 │ "By signing  │             │  • gets the banner text, plus the linked     │
-│  up you      │             │    policy page via the background script     │
+│  up you      │             │    policy page if it's on the same website   │
 │  agree…"     │ ◀────────── │  • summarizes with rules (rules.ts)          │
 └──────────────┘    card     │  • shows the card in a closed Shadow DOM     │
                              └──────────────────────────────────────────────┘
@@ -47,17 +48,17 @@ pay for, and nothing about the user or their browsing is sent anywhere.
    [`patterns.ts`](extension/src/content/patterns.ts) (known consent managers, cookie/consent attributes, accept
    buttons, "by continuing you agree" phrases, links to terms/privacy/cookie policies). It shows at most one card per
    page load, and not again for the same site and kind for 7 days after it's closed.
-2. If the banner links to a full policy, the background script fetches that page **without cookies** and the content
-   script extracts its readable text in an inert `DOMParser` document. The banner's own text always comes first,
-   because it says what "Accept" actually does.
+2. If the banner links to a full policy **on the same website**, the content script downloads that page without
+   cookies or a referrer and extracts its readable text in an inert `DOMParser` document. Policies on other websites
+   are skipped and the banner text is used alone. The banner's own text always comes first, because it says what
+   "Accept" actually does.
 3. The [rule-based summarizer](#how-the-summary-is-made) reads that text on the device and picks 2–3 plain-English
    sentences and a green, yellow or red rating. It takes milliseconds and needs no network.
 4. The card shows the result. If anything fails, it shows a fallback card with "Show the real terms" and Close.
    **A failed summary never blocks the user from accepting**: the card is non-modal, sits at the top of the
    screen away from most banners, and closes with ×, Escape, or automatically when the banner goes away.
-5. After "Looks okay", if PlainAgree found the site's accept button, it asks *"Do you want PlainAgree to press
-   'Accept all' for you?"* It only clicks after the user taps "Yes" (a real, trusted tap; page scripts can't trigger
-   it). PlainAgree never accepts anything on its own.
+5. **Agreed only explains.** It never presses "Accept", "Reject" or anything else on the page. Every summary card
+   says it's an automatic summary and not legal advice, above the buttons, before the user decides anything.
 
 ## Repository layout
 
@@ -69,8 +70,9 @@ extension/
   src/content/detect.ts      Consent UI detection and scoring
   src/content/extract.ts     Policy text extraction
   src/content/overlay.ts     The card (closed Shadow DOM)
-  src/content/index.ts       Page flow: scan, card, dismissals, "accept for me"
-  src/background/index.ts    Fetches linked policy pages, drift hashes, housekeeping
+  src/content/index.ts       Page flow: scan, card, dismissals
+  src/content/policy-fetch.ts Same-website policy download (no cookies, no referrer)
+  static/privacy.html        Privacy and disclaimer page, bundled into the extension
   src/popup/                 Toolbar popup: "Check this page now"
   src/shared/                Types, messages, browser API shim
   demo/                      Standalone demo page for the card and detector
@@ -93,7 +95,8 @@ npm run check
 `check` type-checks, runs the tests (detection heuristics, the summary rules, text extraction, the card) and builds
 every target into `extension/dist/`.
 
-To see the card without installing anything, build and open the demo page:
+To see the card without installing anything, open the live demo at **https://agreed.t3kdesigns.app** (hosted on
+Netlify, built from `netlify.toml`), or build and open it locally:
 
 ```bash
 npm run build && npx esbuild --servedir=extension/dist/demo --serve=5173
@@ -153,7 +156,7 @@ npm run build
 
 ## Desktop and Android: Firefox
 
-`extension/dist/firefox` uses an event-page background script and declares Firefox for Android support
+`extension/dist/firefox` declares Firefox for Android support
 (`gecko_android`). Firefox 128 or newer is required.
 
 - **Desktop, for testing:** open `about:debugging#/runtime/this-firefox` → **Load Temporary Add-on** → pick
@@ -165,7 +168,7 @@ npm run build
 - **Release:** set your own add-on ID (see [placeholders](#placeholders-to-replace-before-release)), build, and submit
   `extension/dist/firefox` to addons.mozilla.org, marking it compatible with Android. Once listed, Android users
   install it from the Firefox add-ons menu.
-- The manifest declares `data_collection_permissions: none`: PlainAgree collects and transmits nothing.
+- The manifest declares `data_collection_permissions: none`: Agreed collects and transmits nothing.
 
 ## Safari on macOS, iPhone and iPad
 
@@ -175,38 +178,35 @@ Safari extensions ship inside a small app, built with Xcode on a Mac. `extension
 2. Convert it to an Xcode project (the `safari/` output folder is git-ignored):
 
    ```bash
-   xcrun safari-web-extension-converter extension/dist/safari --project-location safari --app-name PlainAgree --bundle-identifier com.example.plainagree
+   xcrun safari-web-extension-converter extension/dist/safari --project-location safari --app-name Agreed --bundle-identifier com.example.agreed
    ```
 
-   Replace `com.example.plainagree` with your own bundle identifier. The converter creates both macOS and iOS targets
+   Replace `com.example.agreed` with your own bundle identifier. The converter creates both macOS and iOS targets
    by default.
 3. Open the project in Xcode, set your signing team, and run the macOS or iOS scheme.
 4. Turn it on:
-   - **macOS:** Safari → Settings → Extensions → PlainAgree. For local unsigned builds, first enable
+   - **macOS:** Safari → Settings → Extensions → Agreed. For local unsigned builds, first enable
      Develop → Allow Unsigned Extensions.
-   - **iPhone/iPad:** Settings → Apps → Safari → Extensions → PlainAgree → turn on, and set **Allow on every website**
+   - **iPhone/iPad:** Settings → Apps → Safari → Extensions → Agreed → turn on, and set **Allow on every website**
      (older iOS versions: Settings → Safari → Extensions).
-5. Safari asks users to grant website access. PlainAgree needs **All Websites** to spot consent banners and read linked
-   policies. Without it, Safari asks per site.
+5. Safari asks users to grant website access. Agreed needs **All Websites** to spot consent banners wherever they
+   appear. Without it, Safari asks per site.
 6. To release, archive and submit the app through App Store Connect.
-
-The Safari manifest uses a non-persistent background page (`"persistent": false`), which Safari supports on both
-macOS and iOS.
 
 ## Android: what works and what doesn't
 
 Plainly:
 
-- **Chrome for Android does not support extensions.** There is no way to install PlainAgree, or any other extension,
+- **Chrome for Android does not support extensions.** There is no way to install Agreed, or any other extension,
   in Chrome on Android. Nothing in this repository changes that.
 - **Firefox for Android works.** It supports Manifest V3 extensions, and this build targets it (see
   [Firefox](#desktop-and-android-firefox)). This is the recommended Android option.
 - **Microsoft Edge for Android** has been rolling out extension support, but only for extensions in Microsoft's own
   Android catalog, and availability has varied by version and channel. Check the current Edge release before telling
-  anyone it works. Getting PlainAgree there requires publishing it to Microsoft Edge Add-ons first.
-- **Vivaldi** runs PlainAgree on desktop (use the Chrome build). As far as we know, **Vivaldi for Android does not
+  anyone it works. Getting Agreed there requires publishing it to Microsoft Edge Add-ons first.
+- **Vivaldi** runs Agreed on desktop (use the Chrome build). As far as we know, **Vivaldi for Android does not
   support extensions**. Check before recommending it.
-- Some other Chromium-based Android browsers advertise Chrome Web Store support. They are untested with PlainAgree.
+- Some other Chromium-based Android browsers advertise Chrome Web Store support. They are untested with Agreed.
 
 ## Detection and tuning
 
@@ -235,34 +235,42 @@ Guards against being too eager:
   detection stops.
 - After a card closes for any reason, no card for the same site and kind for 7 days.
 - When the user accepts or rejects on the site itself and the banner disappears, the card closes by itself.
-- PlainAgree only offers to press buttons that clearly mean "accept". It never offers to press "Sign up" or
-  "Continue".
+- Agreed never presses any button on the page. Accept buttons are only used as a detection signal.
 
 The tests in [`extension/test/detect.test.ts`](extension/test/detect.test.ts) cover each of these cases. Add a case
 there when you tune a pattern.
 
 ## Privacy
 
-**Nothing about the user leaves the device.** There is no PlainAgree server. The only network request the extension
-makes is:
+The full user-facing notice is [`extension/static/privacy.html`](extension/static/privacy.html). It is bundled into
+the extension (linked from the toolbar popup) and published on the demo site.
 
-- **Fetching a linked policy page**: when a banner links to its cookie, privacy or terms page, the background script
-  downloads that public page with cookies omitted (`credentials: "omit"`), so the request carries nothing about the
-  user. It goes to the policy's own address, nowhere else.
+**There is no Agreed server, and nothing about the user is sent to us or anyone else.** The only network request the
+extension makes:
+
+- **Downloading a linked policy page from the same website.** When a banner links to its cookie, privacy or terms
+  page on the site the user is already on, the content script downloads that page with cookies omitted
+  (`credentials: "omit"`) and no referrer. Links to other websites are never fetched.
 
 The content script reads only the consent banner's text and button labels, and the policy page's text. It never reads
 form fields, passwords or anything the user types.
 
-What stays on the device (`chrome.storage.local`):
+Permissions: **`storage` only.** No host permissions and no background script. The content script runs on http(s)
+pages because that's where consent banners appear.
 
-- Which sites' cards were closed, so they don't reappear (7 days).
-- A per-site hash of the last policy seen, for a future "these terms changed since your last visit" notice (up to 500
-  sites). It is recorded but not yet shown.
+What stays on the device (`chrome.storage.local`): which site and kind of card was closed, so it doesn't reappear.
+Entries are deleted after 7 days.
+
+## Legal and security
+
+This project was checked against the T3KDesigns legal + security one-pager before release. The filled-in checklist,
+with the reasoning for each box and the open review items, is in
+[`docs/legal-security-checklist.md`](docs/legal-security-checklist.md).
 
 ## Accessibility
 
 - 20–25 px text, a 3 px card border, and color contrast above WCAG AA in both light and dark mode. The rating is
-  shown with an icon *and* a word ("Looks fine", "Read with care", "Watch out"), never color alone.
+  shown with an icon *and* a word ("No red flags found", "Read with care", "Watch out"), never color alone.
 - Real `<button>` and `<a>` elements, `role="dialog"` with `aria-labelledby`, and an `aria-live` region so screen
   readers announce when the summary arrives.
 - Focus moves to the card when it opens and returns to where it was when it closes. Every control has a visible focus
@@ -275,8 +283,8 @@ What stays on the device (`chrome.storage.local`):
 
 | What | Where | Placeholder |
 |---|---|---|
-| Firefox add-on ID | `FIREFOX_ADDON_ID` in `extension/scripts/build.mjs` | `plainagree@example.com` |
-| Safari bundle id | `safari-web-extension-converter --bundle-identifier` | `com.example.plainagree` |
+| Firefox add-on ID | `FIREFOX_ADDON_ID` in `extension/scripts/build.mjs` | `agreed@example.com` |
+| Safari bundle id | `safari-web-extension-converter --bundle-identifier` | `com.example.agreed` |
 | Store listings | Chrome Web Store, Edge Add-ons, addons.mozilla.org, App Store | none exist yet |
 
 ## Known limitations

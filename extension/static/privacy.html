@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agreed privacy and disclaimer</title>
+    <meta name="description" content="What the Agreed browser extension reads, stores and sends, in plain English." />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --text: #111111;
+        --muted: #444444;
+        --line: #d9d9d4;
+        --link: #1d3b9e;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #141414;
+          --text: #f2f2f2;
+          --muted: #c4c4c4;
+          --line: #333333;
+          --link: #9db8ff;
+        }
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-size: 19px;
+        line-height: 1.55;
+      }
+      main {
+        max-width: 68ch;
+        margin: 0 auto;
+        padding: 32px 16px 64px;
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 30px;
+        line-height: 1.2;
+      }
+      h2 {
+        margin: 32px 0 8px;
+        font-size: 22px;
+      }
+      .date {
+        margin: 0 0 24px;
+        color: var(--muted);
+      }
+      .summary {
+        padding: 14px 18px;
+        border: 2px solid var(--text);
+        border-radius: 12px;
+      }
+      ul {
+        padding-left: 1.2em;
+      }
+      li {
+        margin-bottom: 6px;
+      }
+      a {
+        color: var(--link);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Agreed: privacy and disclaimer</h1>
+      <p class="date">Last updated: 29 October 2026</p>
+
+      <p class="summary">
+        <strong>In short:</strong> Agreed has no server and no account. It doesn't collect, sell or send anything about
+        you or your browsing. It reads consent banners and terms on your device to write its summary card.
+      </p>
+
+      <h2>Who makes Agreed</h2>
+      <p>Agreed is a free browser extension made by T3KDesigns. Its source code is public on GitHub.</p>
+
+      <h2>What Agreed reads</h2>
+      <ul>
+        <li>The text and button labels of a cookie banner, a terms pop-up, or an "I agree to the terms" line on the page you're viewing.</li>
+        <li>
+          When that banner links to a cookie, privacy or terms page <strong>on the same website</strong>, Agreed downloads
+          that page to read the full text. Your cookies are not sent with that request, and no referrer is attached.
+          Policies on other websites are not downloaded.
+        </li>
+        <li>Agreed does not read form fields, passwords, or anything you type.</li>
+      </ul>
+
+      <h2>What Agreed sends</h2>
+      <p>
+        Nothing to us, and nothing to anyone else. There is no Agreed server, no analytics, no tracking and no ads. The
+        only network request Agreed makes is the same-website policy download described above, which goes to the
+        website you're already on.
+      </p>
+
+      <h2>What Agreed stores on your device</h2>
+      <ul>
+        <li>
+          When a card closes (you close it, or the banner goes away), Agreed remembers the website address (for example <code>https://example.com</code>) and
+          the kind of notice for 7 days, so the same card doesn't keep coming back. After 7 days it's deleted.
+        </li>
+        <li>This stays in your browser's extension storage. Removing Agreed deletes it.</li>
+      </ul>
+
+      <h2>Not legal advice</h2>
+      <p>
+        Agreed's cards are written automatically by matching common phrases in the text. They can miss things, and they
+        can't tell you whether terms are fair, legal or right for you. "No red flags found" means Agreed didn't spot any
+        of the problems it looks for, not that the terms are safe. For anything important, read the real terms (every
+        card links to them) or ask someone qualified.
+      </p>
+      <p>Agreed never clicks "Accept" or anything else for you. What you agree to is always your choice.</p>
+
+      <h2>Children</h2>
+      <p>
+        Agreed collects no information from anyone, including children. Many websites only allow people aged 13 or older
+        (or older in some countries) to agree to their terms. If you're a child, ask a parent or guardian before agreeing
+        to anything.
+      </p>
+
+      <h2>Changes</h2>
+      <p>If this notice changes, the date at the top will change, and the new version will ship with the extension.</p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions or problems: open an issue at
+        <a href="https://github.com/t3kdesigns03/agreed/issues">github.com/t3kdesigns03/agreed/issues</a>.
+      </p>
+    </main>
+  </body>
+</html>

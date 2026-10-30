@@ -86,3 +86,8 @@ button:focus-visible {
   font-size: 15px;
   color: var(--muted);
 }
+
+.small a {
+  color: inherit;
+  font-weight: 600;
+}

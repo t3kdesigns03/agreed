@@ -1,17 +1,13 @@
 import type { PolicyKind, RiskLevel, Summary } from "../shared/types";
 import { CARD_CSS } from "./overlay-styles";
 
-export type CloseReason = "dismissed" | "looks-okay" | "be-careful" | "accepted" | "consent-gone";
+export type CloseReason = "dismissed" | "looks-okay" | "be-careful" | "consent-gone";
 
 export interface CardOptions {
   kind: PolicyKind;
   /** Full policy URL. Without one, "Show the real terms" calls onShowRealTerms instead. */
   realTermsUrl: string | null;
   onShowRealTerms?: () => void;
-  /** Label of the site's own accept button, when PlainAgree is able to press it. */
-  acceptLabel: string | null;
-  /** Press the site's accept button. Returns false if the button is gone. */
-  onAccept?: () => boolean;
   onClose: (reason: CloseReason) => void;
   /** Render inside this element instead of floating over the page (demo page). */
   container?: HTMLElement;
@@ -25,18 +21,14 @@ const SUBTITLES: Record<PolicyKind, string> = {
 };
 
 const RISK_LABELS: Record<RiskLevel, string> = {
-  green: "Looks fine",
+  // Never "safe": rules can only say what they didn't find.
+  green: "No red flags found",
   yellow: "Read with care",
   red: "Watch out",
 };
 
-/**
- * Whether a click came from the user rather than a script. A separate object
- * only so tests can stand in for a real tap; jsdom can't create trusted events.
- */
-export const userGesture = {
-  isReal: (event: Event): boolean => event.isTrusted,
-};
+/** Shown on every summary, before the user decides anything. */
+const DISCLAIMER = "Automatic summary of the text on this page. Not legal advice.";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const ICON_PATHS: Record<RiskLevel | "close", string> = {
@@ -47,8 +39,9 @@ const ICON_PATHS: Record<RiskLevel | "close", string> = {
 };
 
 /**
- * The PlainAgree summary card. Lives in a closed Shadow DOM so page styles
- * can't break it and page scripts can't read or click it.
+ * The Agreed summary card. Lives in a closed Shadow DOM so page styles can't
+ * break it and page scripts can't read or click it. It only informs: it never
+ * presses anything on the page.
  */
 export class SummaryCard {
   private readonly host: HTMLElement;
@@ -62,7 +55,7 @@ export class SummaryCard {
     const doc = (options.container ?? document.documentElement).ownerDocument;
     this.previousFocus = doc.activeElement;
 
-    this.host = doc.createElement("plainagree-card");
+    this.host = doc.createElement("agreed-card");
     this.root = this.host.attachShadow({ mode: "closed" });
 
     const style = doc.createElement("style");
@@ -86,7 +79,7 @@ export class SummaryCard {
     });
 
     const top = el(doc, "div", "top");
-    const brand = el(doc, "span", "brand", "PlainAgree");
+    const brand = el(doc, "span", "brand", "Agreed");
     const closeButton = el(doc, "button", "close");
     closeButton.type = "button";
     closeButton.setAttribute("aria-label", "Close this summary");
@@ -149,11 +142,11 @@ export class SummaryCard {
 
     const actions = el(doc, "div", "actions");
     actions.append(
-      button(doc, "primary", "Looks okay", () => this.afterLooksOkay()),
+      button(doc, "primary", "Looks okay", () => this.close("looks-okay")),
       button(doc, "secondary", "Be careful", () => this.afterBeCareful()),
     );
 
-    this.render(risk, list, actions);
+    this.render(risk, list, el(doc, "p", "disclaimer", DISCLAIMER), actions);
   }
 
   showError(): void {
@@ -178,27 +171,6 @@ export class SummaryCard {
     this.options.onClose(reason);
   }
 
-  private afterLooksOkay(): void {
-    const { acceptLabel, onAccept } = this.options;
-    if (!acceptLabel || !onAccept) {
-      this.close("looks-okay");
-      return;
-    }
-    const doc = this.host.ownerDocument;
-    const actions = el(doc, "div", "actions");
-    actions.append(
-      button(doc, "primary", "Yes, press it for me", (event) => {
-        // Only a real tap by the user may press the site's button.
-        if (!userGesture.isReal(event)) return;
-        if (onAccept()) this.close("accepted");
-        else this.showAcceptFailed();
-      }),
-      button(doc, "secondary", "No, I'll do it", () => this.close("looks-okay")),
-    );
-    this.render(el(doc, "p", "", `Do you want PlainAgree to press “${acceptLabel}” for you?`), actions);
-    this.focusFirstButton();
-  }
-
   private afterBeCareful(): void {
     const doc = this.host.ownerDocument;
     const actions = el(doc, "div", "actions");
@@ -208,14 +180,6 @@ export class SummaryCard {
       el(doc, "p", "", "Take your time. You can say no, pick fewer options, or leave this website."),
       actions,
     );
-    this.focusFirstButton();
-  }
-
-  private showAcceptFailed(): void {
-    const doc = this.host.ownerDocument;
-    const actions = el(doc, "div", "actions");
-    actions.append(button(doc, "secondary", "Close", () => this.close("dismissed")));
-    this.render(el(doc, "p", "", "We couldn't find that button any more. Please press it yourself on the page."), actions);
     this.focusFirstButton();
   }
 
@@ -249,7 +213,7 @@ function el<K extends keyof HTMLElementTagNameMap>(
 ): HTMLElementTagNameMap[K] {
   const node = doc.createElement(tag);
   if (className) node.className = className;
-  // textContent, never innerHTML: summaries come from the network.
+  // textContent, never innerHTML: some of this text comes from the page.
   if (text !== undefined) node.textContent = text;
   return node;
 }

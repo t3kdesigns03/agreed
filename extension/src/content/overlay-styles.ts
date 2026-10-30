@@ -208,6 +208,13 @@ p {
   margin: 0 0 12px;
 }
 
+.disclaimer {
+  margin: 0 0 12px;
+  font-size: 16px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
 .status {
   display: flex;
   align-items: center;

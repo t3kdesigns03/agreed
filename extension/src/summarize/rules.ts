@@ -267,7 +267,7 @@ export const CONTEXT_POINTS: Record<PolicyKind, string> = {
 
 export const REASONS = {
   /** No red or yellow rule matched, but a reassuring one did. */
-  green: "We didn't find anything worrying.",
+  green: "That's not a guarantee. The real terms are linked below.",
   /** Nothing recognizable at all. */
   unclear: "We couldn't find the key details. Take a quick look yourself.",
 } as const;
