@@ -36,8 +36,6 @@ function renderStatic(slot: string, build: (card: SummaryCard) => void, kind: Po
   const card = new SummaryCard({
     kind,
     realTermsUrl: "#sample-policy",
-    acceptLabel: "Accept all",
-    onAccept: () => true,
     onClose: (reason) => {
       log(`Sample "${slot}" card closed (${reason}).`);
       // Re-render so the gallery stays complete.
@@ -79,7 +77,7 @@ resetButton.addEventListener("click", () => {
 runButton.addEventListener("click", () => {
   liveCard?.close("dismissed");
   const detection = detectConsent(document, {
-    ignore: (el) => el.tagName === "PLAINAGREE-CARD" || el.closest(".gallery") !== null,
+    ignore: (el) => el.tagName === "AGREED-CARD" || el.closest(".gallery") !== null,
   });
   if (!detection) {
     log("No consent UI detected. (Is the banner hidden? Press “Show the banner again”.)");
@@ -94,12 +92,6 @@ runButton.addEventListener("click", () => {
     kind: detection.kind,
     realTermsUrl: detection.policyUrl,
     onShowRealTerms: () => detection.root.scrollIntoView({ behavior: "smooth", block: "center" }),
-    acceptLabel: detection.acceptButton ? detection.acceptLabel : null,
-    onAccept: () => {
-      if (!detection.acceptButton?.isConnected) return false;
-      detection.acceptButton.click();
-      return true;
-    },
     onClose: (reason) => {
       log(`Live card closed (${reason}).`);
       if (liveCard === card) liveCard = null;

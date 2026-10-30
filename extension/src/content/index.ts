@@ -1,9 +1,10 @@
-import { ext, sendToBackground } from "../shared/browser";
-import type { FetchPolicyReply, ManualCheckReply, PolicySeenMessage } from "../shared/messages";
+import { ext } from "../shared/browser";
+import type { ManualCheckReply } from "../shared/messages";
 import type { PolicyKind } from "../shared/types";
 import { summarizePolicy } from "../summarize/summarize";
 import { detectConsent, isRendered, type Detection } from "./detect";
 import { extractPolicyFromHtml, prepareForSummary } from "./extract";
+import { fetchSameSitePolicy } from "./policy-fetch";
 import { SummaryCard } from "./overlay";
 import { MANUAL_SCORE_THRESHOLD, POLICY_PAGE_PATTERN } from "./patterns";
 
@@ -15,13 +16,11 @@ const FIRST_SCAN_DELAY_MS = 800;
 const SCAN_DEBOUNCE_MS = 700;
 /** A fetched policy page with less text than this probably needs JavaScript to render. */
 const MIN_FETCHED_POLICY_CHARS = 400;
-/** Show the fallback card if the linked policy hasn't loaded by then. */
-const POLICY_TIMEOUT_MS = 15_000;
-const CARD_TAG = "PLAINAGREE-CARD";
+const CARD_TAG = "AGREED-CARD";
 
 declare global {
   interface Window {
-    __plainAgreeLoaded?: boolean;
+    __agreedLoaded?: boolean;
   }
 }
 
@@ -32,8 +31,8 @@ let observer: MutationObserver | null = null;
 let scanTimer: number | undefined;
 let consentWatch: number | undefined;
 
-if (!window.__plainAgreeLoaded && document.documentElement instanceof HTMLHtmlElement) {
-  window.__plainAgreeLoaded = true;
+if (!window.__agreedLoaded && document.documentElement instanceof HTMLHtmlElement) {
+  window.__agreedLoaded = true;
   start();
 }
 
@@ -113,7 +112,6 @@ function policyPageDetection(): Detection {
     root,
     score: 0,
     kind,
-    acceptButton: null,
     acceptLabel: null,
     policyUrl: null,
     text: extractPolicyFromHtml(document.documentElement.outerHTML),
@@ -125,8 +123,6 @@ async function showCard(detection: Detection, followPolicyLink: boolean): Promis
     kind: detection.kind,
     realTermsUrl: detection.policyUrl,
     onShowRealTerms: () => reveal(detection.root),
-    acceptLabel: detection.acceptButton ? detection.acceptLabel : null,
-    onAccept: () => pressAccept(detection.acceptButton),
     onClose: () => {
       if (card === current) card = null;
       window.clearInterval(consentWatch);
@@ -139,34 +135,23 @@ async function showCard(detection: Detection, followPolicyLink: boolean): Promis
   watchConsentUi(current, detection.root);
 
   try {
-    const text = followPolicyLink
-      ? await withTimeout(gatherPolicyText(detection), POLICY_TIMEOUT_MS).catch(() => detection.text)
-      : detection.text;
-    const prepared = prepareForSummary(text);
-    // Summarizing happens right here on the device; nothing is sent anywhere.
-    const summary = summarizePolicy(prepared.text, detection.kind);
+    const text = followPolicyLink ? await gatherPolicyText(detection) : detection.text;
+    // Summarizing happens right here on the device; the text is not sent anywhere.
+    const summary = summarizePolicy(prepareForSummary(text).text, detection.kind);
     if (!current.isOpen) return;
     current.showSummary(summary);
-    const seen: PolicySeenMessage = { type: "policy-seen", origin: location.origin, kind: detection.kind, text: prepared.text };
-    sendToBackground(seen).catch(() => undefined);
   } catch {
     if (current.isOpen) current.showError();
   }
 }
 
 /**
- * The banner text plus, when it links to one, the full policy. The banner
- * explains what "Accept" does; the policy has the details.
+ * The banner text plus, when it links to one on the same website, the full
+ * policy. The banner explains what "Accept" does; the policy has the details.
  */
 async function gatherPolicyText(detection: Detection): Promise<string> {
-  if (!detection.policyUrl) return detection.text;
-  let policy = "";
-  try {
-    const reply = await sendToBackground<FetchPolicyReply>({ type: "fetch-policy", url: detection.policyUrl });
-    if (reply?.ok) policy = extractPolicyFromHtml(reply.html);
-  } catch {
-    // Fall back to the banner text alone.
-  }
+  const html = detection.policyUrl ? await fetchSameSitePolicy(detection.policyUrl) : null;
+  const policy = html ? extractPolicyFromHtml(html) : "";
   if (policy.length < MIN_FETCHED_POLICY_CHARS) return detection.text;
   return `Notice shown on the page: ${detection.text}\n\nLinked policy: ${policy}`;
 }
@@ -183,12 +168,6 @@ function watchConsentUi(current: SummaryCard, root: Element): void {
     missedChecks = root.isConnected && isRendered(root) ? 0 : missedChecks + 1;
     if (missedChecks >= 2) current.close("consent-gone");
   }, 1000);
-}
-
-function pressAccept(button: HTMLElement | null): boolean {
-  if (!button || !button.isConnected || !isRendered(button)) return false;
-  button.click();
-  return true;
 }
 
 /** "Show the real terms" when there is no link: scroll to the banner and outline it briefly. */
@@ -222,23 +201,18 @@ async function wasDismissed(kind: PolicyKind): Promise<boolean> {
 async function rememberDismissed(kind: PolicyKind): Promise<void> {
   try {
     await ext.storage.local.set({ [dismissKey(kind)]: Date.now() });
+    await forgetExpiredDismissals();
   } catch {
     // Storage is a convenience; failing to save only means the card may show again.
   }
 }
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = window.setTimeout(() => reject(new Error("timeout")), ms);
-    promise.then(
-      (value) => {
-        window.clearTimeout(timer);
-        resolve(value);
-      },
-      (err) => {
-        window.clearTimeout(timer);
-        reject(err);
-      },
-    );
-  });
+/** Keep only what's needed: dismissals older than DISMISS_TTL_MS are deleted. */
+async function forgetExpiredDismissals(): Promise<void> {
+  const all = await ext.storage.local.get(null);
+  const now = Date.now();
+  const expired = Object.entries(all)
+    .filter(([key, at]) => key.startsWith("dismissed:") && (typeof at !== "number" || now - at >= DISMISS_TTL_MS))
+    .map(([key]) => key);
+  if (expired.length) await ext.storage.local.remove(expired);
 }

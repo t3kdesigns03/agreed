@@ -19,7 +19,7 @@ async function checkActiveTab(): Promise<string> {
   } catch {
     tabId = undefined;
   }
-  if (tabId === undefined) return "PlainAgree can't check this page.";
+  if (tabId === undefined) return "Agreed can't check this page.";
 
   const reply = await new Promise<ManualCheckReply | null>((resolve) => {
     const message: ManualCheckMessage = { type: "manual-check" };
@@ -29,10 +29,10 @@ async function checkActiveTab(): Promise<string> {
     });
   });
 
-  if (!reply) return "PlainAgree can't check this page. If it was open before you installed PlainAgree, reload it and try again.";
+  if (!reply) return "Agreed can't check this page. If it was open before you installed Agreed, reload it and try again.";
   if (reply.found) {
     window.setTimeout(() => window.close(), 600);
-    return "Done. Look for the PlainAgree card on the page.";
+    return "Done. Look for the Agreed card on the page.";
   }
   return "We didn't find any terms or cookie notice on this page.";
 }

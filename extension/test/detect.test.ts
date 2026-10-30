@@ -75,8 +75,8 @@ describe("detectConsent", () => {
     expect(result).not.toBeNull();
     expect(result!.kind).toBe("terms");
     expect(result!.policyUrl).toBe("https://example.com/terms");
-    // Never offer to press "Sign up" for the user.
-    expect(result!.acceptButton).toBeNull();
+    // "Sign up" is not an accept button.
+    expect(result!.acceptLabel).toBeNull();
   });
 
   it("finds a Terms of Service modal", () => {

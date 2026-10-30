@@ -20,8 +20,7 @@ export interface Detection {
   root: Element;
   score: number;
   kind: PolicyKind;
-  /** The site's own accept button, if one clearly exists. Only ever clicked after the user asks. */
-  acceptButton: HTMLElement | null;
+  /** Label of the site's own accept button, if one clearly exists. Used for scoring only; Agreed never presses it. */
   acceptLabel: string | null;
   /** Absolute http(s) URL of the full policy, if the consent UI links to one. */
   policyUrl: string | null;
@@ -33,7 +32,7 @@ export interface DetectOptions {
   threshold?: number;
   /** Override for tests (jsdom has no layout). */
   isVisible?: (el: Element) => boolean;
-  /** Elements to ignore, such as PlainAgree's own card host. */
+  /** Elements to ignore, such as Agreed's own card host. */
   ignore?: (el: Element) => boolean;
 }
 
@@ -146,7 +145,6 @@ function score(el: Element, isKnown: boolean, isVisible: (el: Element) => boolea
     root: el,
     score: total,
     kind,
-    acceptButton,
     acceptLabel: acceptButton ? labelOf(acceptButton) : null,
     policyUrl: policyUrl ?? null,
     text,

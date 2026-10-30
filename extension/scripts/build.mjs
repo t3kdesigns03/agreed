@@ -16,25 +16,26 @@ const watch = process.argv.includes("--watch");
 const { version } = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
 
 // PLACEHOLDER: replace with your own add-on ID before publishing to addons.mozilla.org.
-const FIREFOX_ADDON_ID = "plainagree@example.com";
+const FIREFOX_ADDON_ID = "agreed@example.com";
 
 const TARGETS = ["chrome", "firefox", "safari"];
 
 function manifest(target) {
   const base = {
     manifest_version: 3,
-    name: "PlainAgree",
+    name: "Agreed",
     version,
     description: "Plain-English summaries of the terms, privacy policies and cookie banners you're asked to agree to.",
     icons: { 16: "icons/icon-16.png", 32: "icons/icon-32.png", 48: "icons/icon-48.png", 128: "icons/icon-128.png" },
     action: {
-      default_title: "PlainAgree",
+      default_title: "Agreed",
       default_popup: "popup.html",
       default_icon: { 16: "icons/icon-16.png", 32: "icons/icon-32.png" },
     },
+    // Least permission: storage only, for remembering closed cards for 7 days.
+    // No host permissions and no background script; the content script reads
+    // the banner on the page and, at most, a policy page on the same website.
     permissions: ["storage"],
-    // Needed to read the policy pages that consent banners link to.
-    host_permissions: ["http://*/*", "https://*/*"],
     content_scripts: [
       {
         matches: ["http://*/*", "https://*/*"],
@@ -46,25 +47,23 @@ function manifest(target) {
   };
 
   if (target === "chrome") {
-    return { ...base, background: { service_worker: "background.js" }, minimum_chrome_version: "116" };
+    return { ...base, minimum_chrome_version: "116" };
   }
   if (target === "firefox") {
     return {
       ...base,
-      background: { scripts: ["background.js"] },
       browser_specific_settings: {
         gecko: {
           id: FIREFOX_ADDON_ID,
           strict_min_version: "128.0",
-          // PlainAgree sends nothing anywhere: summaries are made on the device.
+          // Agreed collects and transmits nothing: summaries are made on the device.
           data_collection_permissions: { required: ["none"] },
         },
         gecko_android: { strict_min_version: "128.0" },
       },
     };
   }
-  // Safari (macOS and iOS): a non-persistent background page is the most widely supported form.
-  return { ...base, background: { scripts: ["background.js"], persistent: false } };
+  return base;
 }
 
 const common = {
@@ -81,6 +80,7 @@ function writeStatic(target) {
   writeFileSync(join(out, "manifest.json"), JSON.stringify(manifest(target), null, 2));
   cpSync(join(root, "src", "popup", "popup.html"), join(out, "popup.html"));
   cpSync(join(root, "src", "popup", "popup.css"), join(out, "popup.css"));
+  cpSync(join(root, "static", "privacy.html"), join(out, "privacy.html"));
   cpSync(join(root, "static", "icons"), join(out, "icons"), { recursive: true });
 }
 
@@ -91,7 +91,6 @@ const builds = [
     ...common,
     entryPoints: {
       content: join(root, "src", "content", "index.ts"),
-      background: join(root, "src", "background", "index.ts"),
       popup: join(root, "src", "popup", "popup.ts"),
     },
     outdir: join(dist, target),
@@ -106,6 +105,7 @@ const builds = [
 for (const target of TARGETS) writeStatic(target);
 mkdirSync(join(dist, "demo"), { recursive: true });
 cpSync(join(root, "demo", "index.html"), join(dist, "demo", "index.html"));
+cpSync(join(root, "static", "privacy.html"), join(dist, "demo", "privacy.html"));
 for (const icon of ["icon-32.png", "icon-256.png"]) {
   cpSync(join(root, "static", "icons", icon), join(dist, "demo", icon));
 }

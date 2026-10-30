@@ -1,8 +1,8 @@
 {
-  "name": "plainagree",
+  "name": "agreed",
   "private": true,
   "version": "1.0.0",
-  "description": "PlainAgree: plain-English summaries of Terms of Service, privacy policies and cookie banners.",
+  "description": "Agreed: plain-English summaries of Terms of Service, privacy policies and cookie banners.",
   "workspaces": [
     "extension"
   ],
